@@ -1,0 +1,51 @@
+name: CI - Backend
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    name: Lint, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Installer les dependances
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests unitaires
+        run: npm run test:cov
+        env:
+          JWT_SECRET: ci-test-secret
+          OPENWEATHER_API_KEY: ci-test-key
+
+      - name: Tests end-to-end
+        run: npm run test:e2e
+        env:
+          JWT_SECRET: ci-test-secret
+          OPENWEATHER_API_KEY: ci-test-key
+
+      - name: Build
+        run: npm run build
+
+  docker:
+    name: Build de l'image Docker
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build de l'image (verification uniquement, pas de push)
+        run: docker build -t taskflow-backend:ci .

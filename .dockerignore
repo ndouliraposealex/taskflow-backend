@@ -1,0 +1,6 @@
+node_modules
+dist
+*.sqlite
+.env
+.git
+npm-debug.log
